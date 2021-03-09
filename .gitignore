@@ -1,0 +1,9 @@
+# custom
+data/
+.idea/
+*.state
+checkpoint
+
+__pycache__/
+*.py[cod]
+*$py.class
