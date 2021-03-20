@@ -37,6 +37,14 @@ class TaxStruct(nx.DiGraph):
         # 根据是否只要单一父节点的叶节点可进行更改
         return [node for node in self.nodes.keys() if self.out_degree(node) == 0 and self.in_degree(node) == 1]
 
+    def get_node2full_path(self):
+        node2full_path = {}
+        for node in self.nodes:
+            paths = nx.all_simple_paths(self, source=self.root, target=node)
+            all_nodes = set([node for path in paths for node in path[1:]])
+            node2full_path[node] = all_nodes
+        return node2full_path
+
     @property
     def node2path(self):
         return self._node2path

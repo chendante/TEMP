@@ -57,7 +57,7 @@ if __name__ == '__main__':
     tax = TaxStruct(tax_pairs)
     leaf_nodes = tax.all_leaf_nodes()
     eval_terms = random.sample(leaf_nodes, int(len(tax.nodes) * 0.2))
-    eval_lines = ["\t".join([term, list(tax.predecessors(term))[0]]) + "\n" for term in eval_terms]
+    eval_lines = [list(tax.predecessors(term))[0] + "\n" for term in eval_terms]
     train_lines = ["\t".join(pair) + "\n" for pair in tax_pairs if pair[1] not in eval_terms]
     with codecs.open(args.terms_path, mode='w+', encoding='utf-8') as f:
         f.writelines([term + "\n" for term in eval_terms])

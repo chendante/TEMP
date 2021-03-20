@@ -14,13 +14,13 @@ class TEMP(BertPreTrainedModel):
         self.init_weights()
 
     def forward(
-            self,
-            input_ids=None,
-            attention_mask=None,
-            token_type_ids=None,
-            pool_matrix=None,
-            head_mask=None,
-            labels=None,
+        self,
+        input_ids=None,
+        attention_mask=None,
+        token_type_ids=None,
+        pool_matrix=None,
+        head_mask=None,
+        labels=None,
     ):
         outputs = self.bert(
             input_ids,
