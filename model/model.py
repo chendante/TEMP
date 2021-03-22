@@ -9,18 +9,18 @@ class TEMP(BertPreTrainedModel):
     def __init__(self, config: BertConfig):
         super().__init__(config)
         self.bert = BertModel(config)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.classifier = nn.Linear(config.hidden_size, 1)
         self.loss_fct = nn.BCEWithLogitsLoss()
         self.init_weights()
 
     def forward(
-        self,
-        input_ids=None,
-        attention_mask=None,
-        token_type_ids=None,
-        pool_matrix=None,
-        head_mask=None,
-        labels=None,
+            self,
+            input_ids=None,
+            attention_mask=None,
+            token_type_ids=None,
+            head_mask=None,
+            labels=None,
     ):
         outputs = self.bert(
             input_ids,
@@ -28,9 +28,9 @@ class TEMP(BertPreTrainedModel):
             token_type_ids=token_type_ids,
             head_mask=head_mask,
         )
-        sequence_output = outputs[0]
-        logits = torch.bmm(pool_matrix.unsqueeze(1), sequence_output)
-        logits = self.classifier(logits)
+        pooled_output = outputs[1]
+        pooled_output = self.dropout(pooled_output)
+        logits = self.classifier(pooled_output)
         if labels is not None:
             return self.loss_fct(logits, labels)
         return logits

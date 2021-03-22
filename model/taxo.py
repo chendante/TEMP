@@ -14,6 +14,7 @@ class TaxStruct(nx.DiGraph):
         self._node2path = dict()
         for node in self.nodes.keys():
             self._node2path[node] = list(reversed(nx.shortest_path(self, source=self._root, target=node)))
+        self.leaf_nodes = self.all_leaf_nodes()
 
     def check_useless_edge(self):
         """

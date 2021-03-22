@@ -1,21 +1,21 @@
 import torch
-import sampler
+import model.sampler as sampler
 from torch.utils.data import dataloader
 import transformers
 from tqdm import tqdm
-import base
+from model.base import BaseTrainer
 import codecs
 import model
 import json
 
 
-class Trainer(base.BaseTrainer):
+class Trainer(BaseTrainer):
     def __init__(self, args):
         super().__init__(args)
         with codecs.open(args.taxo_path, encoding='utf-8') as f:
-            # TAXONOMY FILE FORMAT: relation_id <TAB> term <TAB> hypernym
+            # TAXONOMY FILE FORMAT: hypernym <TAB> term
             tax_lines = f.readlines()
-        tax_pairs = [[w for w in reversed(line.strip().split("\t")[1:])] for line in tax_lines]
+        tax_pairs = [line.strip().split("\t") for line in tax_lines]
         self.tax_graph = sampler.TaxStruct(tax_pairs)
         self.sampler = sampler.Sampler(self.tax_graph)
         self.model = model.model.TEMP.from_pretrained(args.pretrained_path,
@@ -37,10 +37,11 @@ class Trainer(base.BaseTrainer):
                                   word2des=self._word2des,
                                   padding_max=self.args.padding_max,
                                   margin_beta=self.args.margin_beta)
-        data_loader = dataloader.DataLoader(dataset, batch_size=16, shuffle=True, drop_last=True)
+        data_loader = dataloader.DataLoader(dataset, batch_size=self.args.batch_size, shuffle=True, drop_last=True)
         scheduler = transformers.get_linear_schedule_with_warmup(optimizer,
                                                                  num_warmup_steps=0,
                                                                  num_training_steps=len(data_loader) * self.args.epochs)
+        self.model.cuda()
         loss_count = 0
         for epoch in range(self.args.epochs):
             dataset = sampler.Dataset(self.sampler,
@@ -48,16 +49,14 @@ class Trainer(base.BaseTrainer):
                                       word2des=self._word2des,
                                       padding_max=self.args.padding_max,
                                       margin_beta=self.args.margin_beta)
-            data_loader = dataloader.DataLoader(dataset, batch_size=16, shuffle=True, drop_last=True)
+            data_loader = dataloader.DataLoader(dataset, batch_size=self.args.batch_size, shuffle=True, drop_last=True)
             loss_all = 0.0
             for batch in tqdm(data_loader, desc='Train epoch %s' % epoch, total=len(data_loader)):
                 optimizer.zero_grad()
                 pos_output = self.model(input_ids=batch["pos_ids"].cuda(), token_type_ids=batch["pos_type_ids"].cuda(),
-                                        attention_mask=batch["pos_attn_masks"].cuda(),
-                                        pool_matrix=batch["pos_pool"].cuda())
+                                        attention_mask=batch["pos_attn_masks"].cuda())
                 neg_output = self.model(input_ids=batch["neg_ids"].cuda(), token_type_ids=batch["neg_type_ids"].cuda(),
-                                        attention_mask=batch["neg_attn_masks"].cuda(),
-                                        pool_matrix=batch["neg_pool"].cuda())
+                                        attention_mask=batch["neg_attn_masks"].cuda())
                 loss = self.model.margin_loss_fct(pos_output, neg_output, batch["margin"].cuda())
                 loss.backward()
                 optimizer.step()
