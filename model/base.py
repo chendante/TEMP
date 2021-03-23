@@ -23,11 +23,8 @@ class BaseTrainer(object):
         self._log_args()
 
     def _log_args(self):
-        d = dict()
-        for arg in vars(self.args):
-            d[arg] = self.args.arg
         with open(self._log_path+".args", mode='w+', encoding='utf-8') as fp:
-            json.dump(d, fp)
+            json.dump(vars(self.args), fp)
 
     def _log_tensorboard(self, dataset_label: str, data_label: str, data: object, iteration: int):
         self._summary_writer.add_scalar('data/%s/%s' % (dataset_label, data_label), data, iteration)

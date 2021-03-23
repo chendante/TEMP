@@ -15,7 +15,8 @@ class Sampler:
         margins = []
         pos_paths = []
         neg_paths = []
-        for node, path in self._tax_graph.node2path.items():
+        for node in self._tax_graph.leaf_nodes:
+            path = self._tax_graph.node2path[node]
             if node == self._tax_graph.root:
                 continue
             while True:

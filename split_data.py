@@ -41,13 +41,13 @@ class TaxStruct(nx.DiGraph):
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(add_help=False)
     arg_parser.add_argument('--taxo_path', type=str, help="path of full taxonomy dataset", required=False,
-                            default="./data/raw_data/science_wordnet_en.taxo")
+                            default="./data/raw_data/food_wordnet_en.taxo")
     arg_parser.add_argument('--train_path', type=str, help="output path of training dataset", required=False,
-                            default="./data/train/science_train.taxo")
+                            default="./data/train/food_train.taxo")
     arg_parser.add_argument('--terms_path', type=str, help="output path of terms file", required=False,
-                            default="./data/eval/science_eval.terms")
+                            default="./data/eval/food_eval.terms")
     arg_parser.add_argument('--eval_path', type=str, help="output path of eval dataset", required=False,
-                            default="./data/eval/science_eval.taxo")
+                            default="./data/eval/food_eval.taxo")
     args, _ = arg_parser.parse_known_args()
     with codecs.open(args.taxo_path, encoding='utf-8') as f:
         # TAXONOMY FILE FORMAT: relation_id <TAB> term <TAB> hypernym
