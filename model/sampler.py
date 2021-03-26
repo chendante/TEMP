@@ -15,8 +15,7 @@ class Sampler:
         margins = []
         pos_paths = []
         neg_paths = []
-        for node in self._tax_graph.leaf_nodes:
-            path = self._tax_graph.node2path[node]
+        for node, path in self._tax_graph.node2path.items():
             if node == self._tax_graph.root:
                 continue
             while True:
@@ -32,7 +31,7 @@ class Sampler:
     @staticmethod
     def margin(path_a, path_b):
         com = len(set(path_a).intersection(set(path_b)))
-        return min((abs(len(path_a) - com) + abs(len(path_b) - com)) / com, 3)
+        return max(min((abs(len(path_a) - com) + abs(len(path_b) - com)) / com, 2), 0.5)
 
 
 class Dataset(TorchDataset):
@@ -65,14 +64,17 @@ class Dataset(TorchDataset):
 
     def encode_path(self, path):
         des_sent = self._word2des[path[0]][0]
-        def_sent = " | ".join(path)
-        encode = self._tokenizer.encode_plus(des_sent, def_sent, add_special_tokens=True,
-                                             # return_tensors='pt'
-                                             )
-        input_len = len(encode["input_ids"])
+        des_ids = self._tokenizer.encode(des_sent)
+        def_ids_l = [self._tokenizer.convert_tokens_to_ids(self._tokenizer.tokenize(w)) for w in path]
+        def_ids = []
+        for def_id in def_ids_l:
+            def_ids.extend(def_id)
+            def_ids += [1]
+        input_ids = des_ids + def_ids + [self._tokenizer.sep_token_id]
+        input_len = len(input_ids)
         assert input_len <= self._padding_max
-        encode["input_ids"] = encode["input_ids"] + [self._tokenizer.pad_token_id] * (self._padding_max - input_len)
-        encode["token_type_ids"] = encode["token_type_ids"] + [0] * (self._padding_max - input_len)
-        encode["attention_mask"] = encode["attention_mask"] + [0] * (self._padding_max - input_len)
-        return torch.LongTensor(encode["input_ids"]), torch.LongTensor(encode["token_type_ids"]), torch.LongTensor(
-            encode["attention_mask"])
+        input_ids = input_ids + [self._tokenizer.pad_token_id] * (self._padding_max - input_len)
+        token_type_ids = [0] * len(des_ids) + [1] * (input_len - len(des_ids)) + [0] * (self._padding_max - input_len)
+        attention_mask = [1] * input_len + [0] * (self._padding_max - input_len)
+        return torch.LongTensor(input_ids), torch.LongTensor(token_type_ids), torch.LongTensor(
+            attention_mask)
