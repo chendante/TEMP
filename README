@@ -1,0 +1,11 @@
+# TEMP
+
+run.py: 将训练 预测 评分整合在一起运行
+train.py, predict.py, scorer.py: 分别为 训练 预测 评分
+split_data.py: 将一个已存在的 Taxonomy 文件，拆分为训练集和测试集
+model: 为主要功能实现模块
+   sampler.py: 包含 数据处理 Encode 计算margin Sampling 和 Dataset
+   taxo.py: 分类体系的树状结构相关操作
+   trainer.py: 训练
+   model.py: 模型
+   eval.py: 预测
